@@ -2,11 +2,12 @@
  * Created by ndyumin on 09.08.2016.
  */
 import Rx from 'rxjs';
+import {curry} from 'ramda';
 import snabbdom from 'snabbdom';
 import h from  'snabbdom/h';
 import {storeRx, lens} from 'rstore';
 
-const dataL = lens('items');
+const dataL = lens('data');
 const metaL = lens('meta');
 
 const patch = snabbdom.init([
@@ -16,12 +17,23 @@ const patch = snabbdom.init([
     require('snabbdom/modules/eventlisteners')
 ]);
 
+/**
+ *
+ * column API
+ *
+ * - string id
+ * - string name
+ * - function dataCellRenderer
+ * - function headerCellRenderer
+ *
+ */
+
 const emptyModel = {
     meta: {
         columns: []
     },
-    items: {
-        data: [],
+    data: {
+        items: [],
         count: 0
     }
 };
@@ -34,15 +46,15 @@ export function model(meta$, dataSource$) {
 }
 
 const isVisible = c => c.visible;
+const methodOrFunction = curry((key, obj, func) =>
+    typeof obj[key] === 'function' ? obj[key] : func);
 
-const customRendererIfAvailable = (column, defaultRenderer) =>
-    typeof column.renderer === 'function'
-        ? column.renderer
-        : defaultRenderer;
+const customRendererIfAvailable = methodOrFunction('dataCellRenderer');
+const customHeaderRendererIfAvailable = methodOrFunction('headerCellRenderer');
 
 const textCellRenderer = value => h('td.text-cell', value);
 
-const renderHeaderCell = c => h('td.header-cell', [c.name]);
+const renderHeaderCell = c => customHeaderRendererIfAvailable(c, textCellRenderer)(c.name);
 const renderDataCell = ({column, value}) => customRendererIfAvailable(column, textCellRenderer)(value);
 
 const renderHeader = model => h('thead', [
@@ -50,7 +62,7 @@ const renderHeader = model => h('thead', [
 ]);
 
 const renderBody = model => h('tbody',
-    model.items.data.map(entry =>
+    model.data.items.map(entry =>
         h('tr',
             model.meta.columns
                 .filter(isVisible)

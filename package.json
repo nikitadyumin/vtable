@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "ramda": "^0.22.1",
     "rstore": "^0.3.5",
     "rxjs": "^5.0.0-beta.10",
     "snabbdom": "^0.5.1"
