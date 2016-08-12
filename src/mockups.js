@@ -36,12 +36,13 @@ export const shuffle = arr => {
         res[i] = res[randomPos];
         res[randomPos] = t;
     }
-    return res.map(c => {
-        c.visible = Math.random() > 0.25;
-        return c;
-    });
+    return res;
 };
 
+export const randomVisibility = arr => arr.map(c => {
+    c.visible = Math.random() > 0.25;
+    return c;
+});
 
 export const meta = () => ({
     columns: [
