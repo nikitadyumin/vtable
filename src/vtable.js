@@ -11,7 +11,9 @@ import {EMPTY_MODEL, model} from './model';
 
 const limitL = lens('limit');
 const columnsL = lens('columns');
+const orderL = lens('order');
 const filtersL = lens('filters');
+const dictionaryL = lens('dictionary');
 
 const patch = snabbdom.init([
     require('snabbdom/modules/class'),
@@ -106,15 +108,18 @@ export const dataset = curry((dataset$, meta$, data$) => {
 });
 
 const comparer = (o1, o2) => JSON.stringify(o1) === JSON.stringify(o2);
-const selector = ({limit, offset, filters}) => ({limit, offset, filters});
+const selector = ({limit, offset, filters, order}) => ({limit, offset, filters, order});
 
 export const ajax = curry((options$, meta$, data$) => {
     const reqOptions$ = meta$.toRx(Rx)
         .map(selector)
         .distinctUntilChanged(comparer);
 
-    const response$ = options$.combineLatest(reqOptions$).switchMap(([opts, {limit, offset, filters}]) => {
+    const response$ = options$.combineLatest(reqOptions$).switchMap(([opts, {limit, offset, filters, order}]) => {
         const aQuery = [];
+        if (order) {
+            aQuery.push(...order.map(({key, value}) => `_sort=${key}&_order=${value < 0 ? 'DESC' : 'ASC'}`));
+        }
         if (limit) {
             aQuery.push('_limit=' + limit);
         }
@@ -135,11 +140,17 @@ export const ajax = curry((options$, meta$, data$) => {
     }));
 });
 
+export const displayValue = curry((options$, meta$, data$) =>
+    meta$.plug(options$, dictionaryL.set));
+
 export const paging = curry((options$, meta$, data$) =>
-    meta$.plug(options$, (meta, opts) => limitL.set(meta, opts.size)));
+    meta$.plug(options$, (meta, opts) => Object.assign({}, meta, opts)));
 
 export const filtering = curry((options$, meta$, data$) =>
     meta$.plug(options$, filtersL.set));
 
 export const columns = curry((options$, meta$, data$) =>
     meta$.plug(options$, columnsL.set));
+
+export const ordering = curry((options$, meta$, data$) =>
+    meta$.plug(options$, orderL.set));
