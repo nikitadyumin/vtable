@@ -2,11 +2,10 @@
  * Created by ndyumin on 25.12.2015.
  */
 module.exports = {
-    entry: "./src/vtable.js",
+    entry: "./src/index.js",
     output: {
-        libraryTarget: "umd",
         path: './dist',
-        filename: "vtable.js"
+        filename: "bundle.js"
     },
     module: {
         loaders: [
